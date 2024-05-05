@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function QuestionForm(props) {
+function QuestionForm({onAddQuestion, onUpdateQuestion, questions}) {
   const [formData, setFormData] = useState({
     prompt: "",
     answer1: "",
@@ -15,11 +15,44 @@ function QuestionForm(props) {
       ...formData,
       [event.target.name]: event.target.value,
     });
+
+    handleAddCorrectIndex();
   }
 
   function handleSubmit(event) {
     event.preventDefault();
     console.log(formData);
+
+    const newQuestionData = {
+      prompt: formData.prompt,
+      answers : [formData.answer1, formData.answer2, formData.answer3, formData.answer4],
+      correctIndex: formData.correctIndex
+    }
+
+    fetch("http://localhost:4000/questions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newQuestionData),
+  })
+  .then(response => response.json())
+  .then(newQuestion => onAddQuestion(newQuestion))
+  }
+
+  function handleAddCorrectIndex() {
+
+    fetch(`http://localhost:4000/questions/${questions.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        correctIndex: formData.correctIndex,
+      }),
+    })
+      .then((response) => response.json())
+      .then((updatedQuestion) => onUpdateQuestion(updatedQuestion));
   }
 
   return (
@@ -84,7 +117,7 @@ function QuestionForm(props) {
             <option value="3">{formData.answer4}</option>
           </select>
         </label>
-        <button type="submit">Add Question</button>
+        <button type="submit" >Add Question</button>
       </form>
     </section>
   );
